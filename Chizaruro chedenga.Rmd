@@ -1,0 +1,140 @@
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(imager)
+```
+
+
+```{r}
+apple <-load.image("C:/Users/collin/Downloads/R images/WhatsApp Image 2026-10-27 at 18.50.60.jpeg" )
+plot(apple)
+```
+
+
+```{r}
+#applying grayscale
+gray_apple<- grayscale(apple)
+plot(gray_apple)
+```
+```{r}
+#Applying threshold
+binary<-gray_apple>0.5
+plot(binary)
+```
+```{r}
+
+```
+```{r}
+blur_apple <- isoblur(apple, sigma = 5)
+plot(blur_apple)
+```
+```{r}
+# 5.3 Face Detection and Recognition
+library(image.libfacedetection)
+library(opencv)
+library(magick)
+
+# Load photo
+img <- image_read("C:/Users/collin/Downloads/R images/WhatsApp Image 2026-10-26 at 11.49.13.jpeg")
+
+# Detect faces (extracts bounding box coordinates)
+faces <- image_detect_faces(img)
+
+# Display detection results dataframe in console
+print(faces$detections)
+
+# Plot photo with red boxes around detected faces
+plot(faces, img, border = "red", lwd = 2)
+```
+```{r}
+# Convert faces data frame coordinates to crop boxes
+detections <- faces$detections
+
+if (nrow(detections) > 0) {
+  # Loop through each detected face and crop it
+  for (i in 1:nrow(detections)) {
+    crop_geo <- sprintf("%dx%d+%d+%d", 
+                        detections$width[i], 
+                        detections$height[i], 
+                        detections$x[i], 
+                        detections$y[i])
+    
+    face_crop <- image_crop(img, crop_geo)
+    
+    # Save each cropped face
+    image_write(face_crop, sprintf("cropped_face_%d.jpg", i))
+  }
+}
+```
+```{r}
+detections <- faces$detections
+
+if (!is.null(detections) && nrow(detections) > 0) {
+  # Loop through each detected face, crop, save, and print
+  for (i in 1:nrow(detections)) {
+    crop_geo <- sprintf("%dx%d+%d+%d", 
+                        detections$width[i], 
+                        detections$height[i], 
+                        detections$x[i], 
+                        detections$y[i])
+    
+    face_crop <- image_crop(img, crop_geo)
+    
+    # Save cropped face to disk
+    image_write(face_crop, sprintf("cropped_face_%d.jpg", i))
+    
+    # --- DISPLAY OUTPUT IN NOTEBOOK ---
+    print(face_crop) # Forces display of the cropped face image
+  }
+} else {
+  print("No faces detected in the image.")
+}
+```
+```{r}
+# Plot image first
+plot(img)
+
+# Annotate each box with confidence percentage
+if (nrow(detections) > 0) {
+  rect(detections$x, detections$y, 
+       detections$x + detections$width, 
+       detections$y + detections$height, 
+       border = "red", lwd = 2)
+  
+  # Add text labels above the bounding boxes
+  text(x = detections$x, y = detections$y - 10, 
+       labels = paste0("Face: ", round(detections$confidence[i] * 100, 1), "%"), 
+       col = "red", cex = 1.2, font = 2)
+}
+```
+```{r}
+library(magick)
+library(image.libfacedetection)
+
+# Load image and detect faces
+img <- image_read("C:/Users/collin/Downloads/R images/WhatsApp Image 2026-10-26 at 11.49.13.jpeg")
+faces <- image_detect_faces(img)
+detections <- faces$detections
+
+if (nrow(detections) > 0) {
+  # Sort face bounding boxes by height
+  tallest_idx <- which.max(detections$height)
+  shortest_idx <- which.min(detections$height)
+  
+  print(paste("Tallest/Largest Face Index:", tallest_idx, "with height:", detections$height[tallest_idx], "px"))
+  print(paste("Shortest/Smallest Face Index:", shortest_idx, "with height:", detections$height[shortest_idx], "px"))
+  
+  # Highlight tallest face in green, shortest in blue
+  plot(faces, img, border = "red")
+  rect(detections$x[tallest_idx], detections$y[tallest_idx], 
+       detections$x[tallest_idx] + detections$width[tallest_idx], 
+       detections$y[tallest_idx] + detections$height[tallest_idx], 
+       border = "green", lwd = 3)
+  rect(detections$x[shortest_idx], detections$y[shortest_idx], 
+       detections$x[shortest_idx] + detections$width[shortest_idx], 
+       detections$y[shortest_idx] + detections$height[shortest_idx], 
+       border = "blue", lwd = 3)
+}
+```
+
